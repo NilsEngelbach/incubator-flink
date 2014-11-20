@@ -257,30 +257,30 @@ public class JobManager implements ExtendedManagementProtocol, InputSplitProvide
 		if(GlobalConfiguration.getInteger(ConfigConstants.MONITORING_LEVEL, ConfigConstants.DEFAULT_MONITORING_LEVEL) != 0)
 		{
 			try {
-	            int rmiPort = GlobalConfiguration.getInteger(ConfigConstants.MONITORING_RMI_PORT, ConfigConstants.DEFAULT_MONITORING_RMI_PORT);
-	            String hostName = GlobalConfiguration.getString(ConfigConstants.MONITORING_HOSTNAME, ConfigConstants.DEFAULT_MONITORING_HOSTNAME);
+				int rmiPort = GlobalConfiguration.getInteger(ConfigConstants.MONITORING_RMI_PORT, ConfigConstants.DEFAULT_MONITORING_RMI_PORT);
+				String hostName = GlobalConfiguration.getString(ConfigConstants.MONITORING_HOSTNAME, ConfigConstants.DEFAULT_MONITORING_HOSTNAME);
 
-	            LocateRegistry.createRegistry(rmiPort);
-	            String jmxURL = "service:jmx:rmi:///jndi/rmi://" + hostName + ":" + rmiPort + "/flink";
+				LocateRegistry.createRegistry(rmiPort);
+				String jmxURL = "service:jmx:rmi:///jndi/rmi://" + hostName + ":" + rmiPort + "/flink";
 	            
-	            JMXServiceURL url = new JMXServiceURL(jmxURL);
+				JMXServiceURL url = new JMXServiceURL(jmxURL);
 
-	            MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+				MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
 	            
-	            ObjectName mbeanName = new ObjectName("org.apache.flink.runtime.monitoring:type=SystemSatistics");
+				ObjectName mbeanName = new ObjectName("org.apache.flink.runtime.monitoring:type=SystemSatistics");
 	            
-	            SystemStatistics mbean = new SystemStatistics();
+				SystemStatistics mbean = new SystemStatistics();
 	            
-	            mbs.registerMBean(mbean, mbeanName);
+				mbs.registerMBean(mbean, mbeanName);
 	            
-	            JMXConnectorServer connectorServer = JMXConnectorServerFactory.newJMXConnectorServer(url, new HashMap<String, Object>(), mbs);
+				JMXConnectorServer connectorServer = JMXConnectorServerFactory.newJMXConnectorServer(url, new HashMap<String, Object>(), mbs);
 
-	            try {
-	                connectorServer.start();
-	            } catch (IOException ex) {
-	                LOG.warn("Cannot start JMXConnectorServer on " + jmxURL, ex);
+				try {
+					connectorServer.start();
+				} catch (IOException ex) {
+					LOG.warn("Cannot start JMXConnectorServer on " + jmxURL, ex);
 	            }
-	            LOG.info("Management using JMX available from '" + jmxURL + "'.");
+				LOG.info("Management using JMX available from '" + jmxURL + "'.");
 			} catch (Exception e) {
 				LOG.error("Could not start the JMX connection", e);
 			}
