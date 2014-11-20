@@ -298,6 +298,23 @@ public final class ConfigConstants {
 	
 	public static final String YARN_AM_PRC_PORT = "yarn.am.rpc.port";
 	
+	// ----------------------------- Monitoring ----------------------------
+	
+	/**
+	 * The config parameter defining the monitoring level.
+	 */
+	public static final String MONITORING_LEVEL = "monitoring.level";
+	
+	/**
+	 * The config parameter defining the hostname for the MBean server.  Default: "localhost"
+	 */
+	public static final String MONITORING_HOSTNAME = "monitoring.hostname";
+	
+	/**
+	 * The config parameter defining the RMI port for the MBean server to register MBeans remotely.
+	 */
+	public static final String MONITORING_RMI_PORT = "monitoring.RMI.port";
+	
 	// ----------------------------- Miscellaneous ----------------------------
 	
 	/**
@@ -543,6 +560,28 @@ public final class ConfigConstants {
 	 * Sets the number of local task managers
 	 */
 	public static final String LOCAL_INSTANCE_MANAGER_NUMBER_TASK_MANAGER = "localinstancemanager.numtaskmanager";
+	
+	
+	// ----------------------------- Monitoring ----------------------------
+	
+	/**
+	 * The default monitoring level:
+	 * 0 - No
+	 * 1 - Standard
+	 * 2 - Full
+	 */
+	public static final int DEFAULT_MONITORING_LEVEL = 1;
+	
+	/**
+	 * The default hostname for the MBean server.
+	 */
+	public static final String DEFAULT_MONITORING_HOSTNAME = "localhost";
+
+	
+	/**
+	 * The default rmi port for the MBean server.
+	 */
+	public static final int DEFAULT_MONITORING_RMI_PORT = 9000;
 	
 	
 	// ----------------------------- Deprecated --------------------------------

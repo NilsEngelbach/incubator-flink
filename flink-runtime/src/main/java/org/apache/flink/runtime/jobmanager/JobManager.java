@@ -21,10 +21,13 @@ package org.apache.flink.runtime.jobmanager;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.rmi.registry.LocateRegistry;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,6 +35,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+import javax.management.remote.JMXConnectorServer;
+import javax.management.remote.JMXConnectorServerFactory;
+import javax.management.remote.JMXServiceURL;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -85,6 +94,8 @@ import org.apache.flink.runtime.jobmanager.archive.ArchiveListener;
 import org.apache.flink.runtime.jobmanager.archive.MemoryArchivist;
 import org.apache.flink.runtime.jobmanager.scheduler.Scheduler;
 import org.apache.flink.runtime.jobmanager.web.WebInfoServer;
+import org.apache.flink.runtime.monitoring.JobManagerMBean;
+import org.apache.flink.runtime.monitoring.SystemStatistics;
 import org.apache.flink.runtime.protocols.AccumulatorProtocol;
 import org.apache.flink.runtime.protocols.ChannelLookupProtocol;
 import org.apache.flink.runtime.protocols.ExtendedManagementProtocol;
@@ -106,7 +117,7 @@ import com.google.common.base.Preconditions;
  * It receives jobs from clients, tracks the distributed execution.
  */
 public class JobManager implements ExtendedManagementProtocol, InputSplitProviderProtocol,
-		JobManagerProtocol, ChannelLookupProtocol, JobStatusListener, AccumulatorProtocol
+		JobManagerProtocol, ChannelLookupProtocol, JobStatusListener, AccumulatorProtocol, JobManagerMBean
 {
 
 	private static final Logger LOG = LoggerFactory.getLogger(JobManager.class);
@@ -242,6 +253,38 @@ public class JobManager implements ExtendedManagementProtocol, InputSplitProvide
 		// create the scheduler and make it listen at the availability of new instances
 		this.scheduler = new Scheduler(this.executorService);
 		this.instanceManager.addInstanceListener(this.scheduler);
+		
+		if(GlobalConfiguration.getInteger(ConfigConstants.MONITORING_LEVEL, ConfigConstants.DEFAULT_MONITORING_LEVEL) != 0)
+		{
+			try {
+	            int rmiPort = GlobalConfiguration.getInteger(ConfigConstants.MONITORING_RMI_PORT, ConfigConstants.DEFAULT_MONITORING_RMI_PORT);
+	            String hostName = GlobalConfiguration.getString(ConfigConstants.MONITORING_HOSTNAME, ConfigConstants.DEFAULT_MONITORING_HOSTNAME);
+
+	            LocateRegistry.createRegistry(rmiPort);
+	            String jmxURL = "service:jmx:rmi:///jndi/rmi://" + hostName + ":" + rmiPort + "/flink";
+	            
+	            JMXServiceURL url = new JMXServiceURL(jmxURL);
+
+	            MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+	            
+	            ObjectName mbeanName = new ObjectName("org.apache.flink.runtime.monitoring:type=SystemSatistics");
+	            
+	            SystemStatistics mbean = new SystemStatistics();
+	            
+	            mbs.registerMBean(mbean, mbeanName);
+	            
+	            JMXConnectorServer connectorServer = JMXConnectorServerFactory.newJMXConnectorServer(url, new HashMap<String, Object>(), mbs);
+
+	            try {
+	                connectorServer.start();
+	            } catch (IOException ex) {
+	                LOG.warn("Cannot start JMXConnectorServer on " + jmxURL, ex);
+	            }
+	            LOG.info("Management using JMX available from '" + jmxURL + "'.");
+			} catch (Exception e) {
+				LOG.error("Could not start the JMX connection", e);
+			}
+		}
 	}
 
 	public void shutdown() {
