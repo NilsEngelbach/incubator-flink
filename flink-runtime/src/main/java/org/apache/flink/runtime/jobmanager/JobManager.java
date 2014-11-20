@@ -267,7 +267,7 @@ public class JobManager implements ExtendedManagementProtocol, InputSplitProvide
 
 				MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
 	            
-				ObjectName mbeanName = new ObjectName("org.apache.flink.runtime.monitoring:type=SystemSatistics");
+				ObjectName mbeanName = new ObjectName("org.apache.flink.runtime.monitoring:type=SystemStatistics");
 	            
 				SystemStatistics mbean = new SystemStatistics();
 	            
@@ -279,7 +279,7 @@ public class JobManager implements ExtendedManagementProtocol, InputSplitProvide
 					connectorServer.start();
 				} catch (IOException ex) {
 					LOG.warn("Cannot start JMXConnectorServer on " + jmxURL, ex);
-	            }
+				}
 				LOG.info("Management using JMX available from '" + jmxURL + "'.");
 			} catch (Exception e) {
 				LOG.error("Could not start the JMX connection", e);
